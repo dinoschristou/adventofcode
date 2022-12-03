@@ -1,0 +1,3 @@
+Advent of Code solutions...
+
+This is very messy code, that was written in the brief momemts between life and work! 
