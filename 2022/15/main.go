@@ -20,8 +20,7 @@ type Sensor struct {
 }
 
 type Grid struct {
-	sensors          []Sensor
-	noBeaconsAllowed map[Point]bool
+	sensors []Sensor
 }
 
 func main() {
@@ -49,12 +48,7 @@ func main() {
 	c := g.NoBeacons(2000000)
 	fmt.Printf("No beacons: %d\n", c)
 
-	beacon, err := g.findBeacon2(4000000)
-
-	//beacon, err := g.findBeacon(20, 20)
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
+	beacon, _ := g.findBeacon(4000000)
 	fmt.Printf("Beacon: %v\n", beacon)
 
 	bigx := big.NewInt(int64(beacon.x))
@@ -62,9 +56,6 @@ func main() {
 	res := bigx.Mul(bigx, big.NewInt(4000000))
 	res = res.Add(res, bigy)
 	fmt.Printf("Result: %v\n", res)
-	fmt.Printf("Tuning frequency %d\n", beacon.x*4000000+beacon.y)
-
-	fmt.Printf("Beacon allowed %v\n", g.BeaconAllowed(beacon))
 }
 
 func (g Grid) IsBeacon(p Point) bool {
@@ -74,12 +65,6 @@ func (g Grid) IsBeacon(p Point) bool {
 		}
 	}
 	return false
-}
-func min(x, y int) int {
-	if x < y {
-		return x
-	}
-	return y
 }
 
 func max(x, y int) int {
@@ -104,12 +89,9 @@ func (g Grid) nearbySensors(row int) []Sensor {
 	return nearby
 }
 
-func (g Grid) findBeacon2(limit int) (Point, error) {
+func (g Grid) findBeacon(limit int) (Point, error) {
 
 	for row := 0; row <= limit; row++ {
-		if row%10000 == 0 {
-			fmt.Printf("Trying row %d\n", row)
-		}
 		intervals := g.intervals(row)
 		for i := 1; i < len(intervals); i++ {
 			if intervals[i].max < 0 {
@@ -127,7 +109,7 @@ func (g Grid) findBeacon2(limit int) (Point, error) {
 			}
 		}
 	}
-	return Point{}, fmt.Errorf("No beacon found")
+	return Point{}, fmt.Errorf("no beacon found")
 }
 
 func (g Grid) intervals(row int) []Interval {
@@ -158,40 +140,6 @@ func compressIntervals(intervals []Interval) []Interval {
 		}
 	}
 	return res
-}
-func (g Grid) findBeacon(limit int) (Point, error) {
-	_, _, maxX, maxY := g.extremities()
-
-	ulimX := min(limit, maxX+1)
-	ulimY := min(limit, maxY+1)
-
-	for i := 0; i <= ulimX; i++ {
-		for j := 0; j <= ulimY; j++ {
-			if i%10000 == 0 && j%10000 == 0 {
-				fmt.Printf("Trying %d, %d\n", i, j)
-			}
-			p := Point{i, j}
-			if !g.BeaconAllowed(p) {
-				return p, nil
-			}
-		}
-	}
-	return Point{}, fmt.Errorf("No beacon found")
-}
-
-func (g Grid) BeaconAllowed(p Point) bool {
-	for _, s := range g.sensors {
-		if s.s == p {
-			return false
-		}
-		if s.b == p {
-			return false
-		}
-		if s.WithinRange(p) {
-			return false
-		}
-	}
-	return true
 }
 
 func (s Sensor) WithinRange(p Point) bool {
